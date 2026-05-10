@@ -18,8 +18,7 @@ namespace FinancialControl.Application.UseCases
             if(existingUser != null) 
                 throw new Exception("User with this email already exists.");
 
-            //Voltar aqui para adicionar o hash da senha
-            var passwordHash = dto.Password;
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
             var user = new User(
                 dto.Name,
