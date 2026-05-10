@@ -1,7 +1,11 @@
+using FinancialControl.API.Middlewares;
 using FinancialControl.Application.Interfaces;
 using FinancialControl.Application.UseCases;
+using FinancialControl.Application.Validators;
 using FinancialControl.Infrastructure.Data;
 using FinancialControl.Infrastructure.Repositories;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +27,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<CreateUserUseCase>();
+builder.Services.AddFluentValidationAutoValidation();
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateUserDtoValidator>();
 
 var app = builder.Build();
 
@@ -33,7 +40,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
-
+app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 
 app.Run();
