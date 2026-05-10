@@ -1,4 +1,5 @@
 ﻿using FinancialControl.Application.DTOs;
+using FinancialControl.Application.Exceptions;
 using FinancialControl.Application.Interfaces;
 using FinancialControl.Domain.Entities;
 
@@ -16,7 +17,7 @@ namespace FinancialControl.Application.UseCases
         {
             var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
             if(existingUser != null) 
-                throw new Exception("User with this email already exists.");
+                throw new BusinessException("User with this email already exists.");
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 

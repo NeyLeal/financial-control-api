@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using FinancialControl.Application.Exceptions;
+using System.Text.Json;
 
 namespace FinancialControl.API.Middlewares
 {
@@ -12,11 +13,18 @@ namespace FinancialControl.API.Middlewares
             try             {
                 await _next(context);
             }
-            catch (Exception ex)
-            {
-                context.Response.StatusCode = 500;
+            catch(BusinessException ex) 
+            { 
+                context.Response.StatusCode = StatusCodes.Status409Conflict;
                 context.Response.ContentType = "application/json";
                 var response = new { message = ex.Message };
+                await context.Response.WriteAsJsonAsync(JsonSerializer.Serialize(response));
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "application/json";
+                var response = "Internal server error";
                 await context.Response.WriteAsJsonAsync(JsonSerializer.Serialize(response));
             }
         }
