@@ -1,4 +1,6 @@
-﻿using FinancialControl.Infrastructure.Data;
+﻿using FinancialControl.Application.DTOs;
+using FinancialControl.Domain.Entities;
+using FinancialControl.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -27,6 +29,22 @@ namespace FinancialControl.API.Controllers
                 message = "Protected route accessed successfully",
                 userId
             });
+        }
+        [HttpPost]
+        public async Task<IActionResult> Create(CreateTransactionDto dto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var transaction = new Transaction(
+                Guid.Parse(userId!),
+                dto.Amount,
+                dto.Description,
+                (Domain.Enums.TransactionType)dto.Type,
+                DateTime.UtcNow
+            );
+            _context.Transactions.Add(transaction);
+            await _context.SaveChangesAsync();
+            return Ok(transaction);
         }
     }
 }
