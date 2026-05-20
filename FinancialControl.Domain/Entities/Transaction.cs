@@ -15,6 +15,7 @@ namespace FinancialControl.Domain.Entities
 
         public Transaction(Guid userId, decimal amount, string description, TransactionType type, DateTime date)
         {
+            Validate(UserId, amount, description);
             Id = Guid.NewGuid();
             UserId = userId;
             Amount = amount;
@@ -31,6 +32,14 @@ namespace FinancialControl.Domain.Entities
                 throw new ArgumentException("Amount must be greater than zero.");
             if (string.IsNullOrWhiteSpace(description))
                 throw new ArgumentException("Description cannot be empty.");
+        }
+
+        public void Update(decimal amount, string description, TransactionType type)
+        {
+            Validate(UserId, amount, description);
+            Amount = amount;
+            Description = description;
+            Type = type;
         }
     }
 }

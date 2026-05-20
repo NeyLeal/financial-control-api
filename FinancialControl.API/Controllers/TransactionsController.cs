@@ -4,7 +4,7 @@ using FinancialControl.Domain.Enums;
 using FinancialControl.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.InteropServices;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace FinancialControl.API.Controllers
@@ -21,33 +21,19 @@ namespace FinancialControl.API.Controllers
             _context = context;
         }
 
+        
+        #region Get
         [HttpGet]
         public IActionResult Get()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var transactions = _context.Transactions
-                .Where(t => t.UserId == Guid.Parse(userId))
+                .Where(t => t.UserId == Guid.Parse(userId!))
                 .OrderByDescending(t => t.Date)
                 .ToList();
 
             return Ok(transactions);
-        }
-        [HttpPost]
-        public async Task<IActionResult> Create(CreateTransactionDto dto)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            var transaction = new Transaction(
-                Guid.Parse(userId!),
-                dto.Amount,
-                dto.Description,
-                (Domain.Enums.TransactionType)dto.Type,
-                DateTime.UtcNow
-            );
-            _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
-            return Ok(transaction);
         }
         [HttpGet("summary")]
         public IActionResult GetSummary()
@@ -56,7 +42,6 @@ namespace FinancialControl.API.Controllers
 
             var transactions = _context.Transactions
                 .Where(t => t.UserId == Guid.Parse(userId!))
-                .OrderByDescending(t => t.Date)
                 .ToList();
 
             var income = transactions
@@ -77,5 +62,71 @@ namespace FinancialControl.API.Controllers
 
             return Ok(summary);
         }
+        #endregion
+        #region Post
+        [HttpPost]
+        public async Task<IActionResult> Create(CreateTransactionDto dto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var transaction = new Transaction(
+                Guid.Parse(userId!),
+                dto.Amount,
+                dto.Description,
+                (Domain.Enums.TransactionType)dto.Type,
+                DateTime.UtcNow
+            );
+            _context.Transactions.Add(transaction);
+            await _context.SaveChangesAsync();
+            return Ok(transaction);
+        }
+        #endregion
+        #region Put
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, UpdateTransactionDto dto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var transaction = await _context.Transactions.FirstOrDefaultAsync(
+                t => t.Id == id && 
+                t.UserId == Guid.Parse(userId!));
+
+            if(transaction == null)
+            {
+                return NotFound(new
+                {
+                    message = "Transaction not found."
+                });
+            }
+
+            transaction.Update( dto.Amount, dto.Description, (TransactionType)dto.Type);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(transaction);
+        }
+        #endregion
+        #region Delete
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == Guid.Parse(userId!));
+
+            if(transaction is null)
+            {
+                return NotFound(new
+                {
+                    message = "Transaction not found."
+                });
+            }
+            _context.Transactions.Remove(transaction);
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        #endregion
+
     }
 }
