@@ -24,17 +24,49 @@ namespace FinancialControl.API.Controllers
         
         #region Get
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get([FromQuery] GetTransactionQueryDto query)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var transactions = _context.Transactions
-                .Where(t => t.UserId == Guid.Parse(userId!))
-                .OrderByDescending(t => t.Date)
-                .ToList();
+            var transactionsQuery = _context.Transactions
+                .Where(t => t.UserId == Guid.Parse(userId!));
 
-            return Ok(transactions);
+            if (query.Page <= 0)
+                query.Page = 1;
+
+            if (query.PageSize <= 0)
+                query.PageSize = 10;
+
+            if (!string.IsNullOrWhiteSpace(query.Type))
+            {
+                var normalizedType = query.Type.Trim().ToLower();
+
+                transactionsQuery = normalizedType switch
+                {
+                    "income" => transactionsQuery.Where(t => t.Type == TransactionType.Income),
+                    "expense" => transactionsQuery.Where(t => t.Type == TransactionType.Expense),
+
+                    _ => transactionsQuery
+                };
+            }
+
+            var totalItems = await transactionsQuery.CountAsync();
+
+            var transactions = await transactionsQuery
+                .OrderByDescending(t => t.Date)
+                .Skip((query.Page - 1)  * query.PageSize)
+                .Take(query.PageSize)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                page = query.Page,
+                pageSize = query.PageSize,
+                totalItems,
+                data = transactions
+            });
         }
+
         [HttpGet("summary")]
         public IActionResult GetSummary()
         {
