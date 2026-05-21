@@ -1,4 +1,4 @@
-﻿using FinancialControl.Application.DTOs;
+﻿using FinancialControl.Application.DTOs.TransactionDto;
 using FluentValidation;
 
 namespace FinancialControl.Application.Validators
@@ -7,7 +7,7 @@ namespace FinancialControl.Application.Validators
     {
         public CreateTransactionDtoValidator()
         {
-            RuleFor( x => x.Amount).GreaterThan(0);
+            RuleFor(x => x.Amount).GreaterThan(0);
             RuleFor(x => x.Description)
                 .NotEmpty()
                 .MaximumLength(200);

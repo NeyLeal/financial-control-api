@@ -1,4 +1,4 @@
-﻿namespace FinancialControl.Application.DTOs
+﻿namespace FinancialControl.Application.DTOs.UserDto
 {
     public class UserResponseDto
     {

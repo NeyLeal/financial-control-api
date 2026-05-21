@@ -27,6 +27,16 @@ namespace FinancialControl.API.Middlewares
                 var response = "Internal server error";
                 await context.Response.WriteAsJsonAsync(JsonSerializer.Serialize(response));
             }
+            //catch (Exception exception)
+            //{
+            //    context.Response.StatusCode = 500;
+
+            //    await context.Response.WriteAsJsonAsync(new
+            //    {
+            //        message = exception.Message,
+            //        stackTrace = exception.StackTrace
+            //    });
+            //}
         }
     }
 }

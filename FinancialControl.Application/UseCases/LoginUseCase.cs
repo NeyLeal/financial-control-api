@@ -1,6 +1,6 @@
-﻿using FinancialControl.Application.DTOs;
-using FinancialControl.Application.Interfaces;
+﻿using FinancialControl.Application.Interfaces;
 using FinancialControl.Application.Exceptions;
+using FinancialControl.Application.DTOs.UserDto;
 
 namespace FinancialControl.Application.UseCases
 {

@@ -1,10 +1,8 @@
-﻿using FinancialControl.Application.DTOs;
-using FinancialControl.Domain.Entities;
+﻿using FinancialControl.Application.DTOs.TransactionDto;
+using FinancialControl.Application.UseCases;
 using FinancialControl.Domain.Enums;
-using FinancialControl.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace FinancialControl.API.Controllers
@@ -14,83 +12,45 @@ namespace FinancialControl.API.Controllers
     [Authorize]
     public class TransactionsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly GetTransactionUseCase _getTransactionUseCase;
+        private readonly GetTransactionSummaryUseCase _getTransactionSummaryUseCase;
+        private readonly CreateTransactionUseCase _createTransactionUseCase;
+        private readonly DeleteTransactionUseCase _deleteTransactionUseCase;
+        private readonly UpdateTransactionUseCase _updateTransactionUseCase;
 
-        public TransactionsController(ApplicationDbContext context)
+        public TransactionsController(
+            CreateTransactionUseCase createTransactionUseCase,
+            DeleteTransactionUseCase deleteTransactionUseCase,
+            GetTransactionUseCase getTransactionUseCase,
+            GetTransactionSummaryUseCase getTransactionSummaryUseCase,
+            UpdateTransactionUseCase updateTransactionUseCase
+            )
         {
-            _context = context;
+            _getTransactionUseCase = getTransactionUseCase;
+            _getTransactionSummaryUseCase = getTransactionSummaryUseCase;
+            _createTransactionUseCase = createTransactionUseCase;
+            _deleteTransactionUseCase = deleteTransactionUseCase;
+            _updateTransactionUseCase = updateTransactionUseCase;
         }
 
         
         #region Get
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] GetTransactionQueryDto query)
+        public async Task<IActionResult> Get()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var transactionsQuery = _context.Transactions
-                .Where(t => t.UserId == Guid.Parse(userId!));
+            var transaction = await _getTransactionUseCase.ExecuteAsync(Guid.Parse(userId!));
 
-            if (query.Page <= 0)
-                query.Page = 1;
-
-            if (query.PageSize <= 0)
-                query.PageSize = 10;
-
-            if (!string.IsNullOrWhiteSpace(query.Type))
-            {
-                var normalizedType = query.Type.Trim().ToLower();
-
-                transactionsQuery = normalizedType switch
-                {
-                    "income" => transactionsQuery.Where(t => t.Type == TransactionType.Income),
-                    "expense" => transactionsQuery.Where(t => t.Type == TransactionType.Expense),
-
-                    _ => transactionsQuery
-                };
-            }
-
-            var totalItems = await transactionsQuery.CountAsync();
-
-            var transactions = await transactionsQuery
-                .OrderByDescending(t => t.Date)
-                .Skip((query.Page - 1)  * query.PageSize)
-                .Take(query.PageSize)
-                .ToListAsync();
-
-            return Ok(new
-            {
-                page = query.Page,
-                pageSize = query.PageSize,
-                totalItems,
-                data = transactions
-            });
+            return Ok(transaction);
         }
 
         [HttpGet("summary")]
-        public IActionResult GetSummary()
+        public async Task<IActionResult> GetSummary()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var transactions = _context.Transactions
-                .Where(t => t.UserId == Guid.Parse(userId!))
-                .ToList();
-
-            var income = transactions
-                .Where(t => t.Type == TransactionType.Income)
-                .Sum(t => t.Amount);
-
-            var expenses = transactions
-                .Where(t => t.Type == TransactionType.Expense)
-                .Sum(t => t.Amount);
-
-            var summary = new TransactionSummaryDto
-            {
-                Income = income,
-                Expenses = expenses,
-                Balance = income - expenses
-
-            };
+            var summary = await _getTransactionSummaryUseCase.ExecuteAsync(Guid.Parse(userId!));
 
             return Ok(summary);
         }
@@ -101,15 +61,12 @@ namespace FinancialControl.API.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var transaction = new Transaction(
+            var transaction = await _createTransactionUseCase.ExecuteAsync(
                 Guid.Parse(userId!),
                 dto.Amount,
                 dto.Description,
-                (Domain.Enums.TransactionType)dto.Type,
-                DateTime.UtcNow
-            );
-            _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
+                (TransactionType)dto.Type);
+
             return Ok(transaction);
         }
         #endregion
@@ -119,11 +76,14 @@ namespace FinancialControl.API.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var transaction = await _context.Transactions.FirstOrDefaultAsync(
-                t => t.Id == id && 
-                t.UserId == Guid.Parse(userId!));
+            var updated = await _updateTransactionUseCase.ExecuteAsync(
+                        id,
+                        Guid.Parse(userId!),
+                        dto.Amount,
+                        dto.Description,
+                        (TransactionType)dto.Type);
 
-            if(transaction == null)
+            if (!updated)
             {
                 return NotFound(new
                 {
@@ -131,11 +91,7 @@ namespace FinancialControl.API.Controllers
                 });
             }
 
-            transaction.Update( dto.Amount, dto.Description, (TransactionType)dto.Type);
-
-            await _context.SaveChangesAsync();
-
-            return Ok(transaction);
+            return NoContent();
         }
         #endregion
         #region Delete
@@ -143,18 +99,15 @@ namespace FinancialControl.API.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == Guid.Parse(userId!));
+            var delete = await _deleteTransactionUseCase.ExecuteAsync(id, Guid.Parse(userId!));
 
-            if(transaction is null)
+            if(!delete)
             {
                 return NotFound(new
                 {
                     message = "Transaction not found."
                 });
             }
-            _context.Transactions.Remove(transaction);
-
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }

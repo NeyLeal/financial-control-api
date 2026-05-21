@@ -1,4 +1,4 @@
-﻿using FinancialControl.Application.DTOs;
+﻿using FinancialControl.Application.DTOs.UserDto;
 using FluentValidation;
 
 namespace FinancialControl.Application.Validators

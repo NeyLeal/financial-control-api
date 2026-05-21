@@ -1,4 +1,4 @@
-﻿using FinancialControl.Application.DTOs;
+﻿using FinancialControl.Application.DTOs.UserDto;
 using FinancialControl.Application.UseCases;
 using Microsoft.AspNetCore.Mvc;
 

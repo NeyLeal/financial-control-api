@@ -15,7 +15,7 @@ namespace FinancialControl.Domain.Entities
 
         public Transaction(Guid userId, decimal amount, string description, TransactionType type, DateTime date)
         {
-            Validate(UserId, amount, description);
+            Validate(userId, amount, description);
             Id = Guid.NewGuid();
             UserId = userId;
             Amount = amount;

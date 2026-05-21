@@ -1,4 +1,4 @@
-﻿using FinancialControl.Application.DTOs;
+﻿using FinancialControl.Application.DTOs.UserDto;
 using FinancialControl.Application.Exceptions;
 using FinancialControl.Application.Interfaces;
 using FinancialControl.Domain.Entities;
