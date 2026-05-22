@@ -25,3 +25,6 @@ docker-data/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local Secrets
+FinancialControl.API/appsettings.Development.json
