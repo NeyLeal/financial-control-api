@@ -13,9 +13,13 @@ namespace FinancialControl.Application.UseCases
             _repository = repository;
         }
 
-        public async Task<TransactionSummaryDto> ExecuteAsync(Guid userId)
+        public async Task<TransactionSummaryDto> ExecuteAsync(Guid userId, GetTransactionSummaryDto dto)
         {
-            var transactions = await _repository.GetByUserIdAsync(userId);
+            var transactions = await _repository.GetSummaryAsync(
+                userId,
+                dto.CategoryId,
+                dto.StartDate,
+                dto.EndDate);
 
             var income = transactions
                 .Where(t => t.Type == TransactionType.Income)

@@ -15,16 +15,21 @@ namespace FinancialControl.Application.UseCases
         public async Task<bool> ExecuteAsync(
             Guid transactionId,
             Guid userId,
+            Guid categoryId,
             decimal amount,
             string description,
             TransactionType type
             )
         {
             var transaction = await _repository.GetByIdAsync(transactionId, userId);
+
             if(transaction == null )
                 return false;
-            transaction.Update( amount, description, type );
+
+            transaction.Update(categoryId, amount, description, type );
+
             await _repository.UpdateAsync(transaction);
+
             await _repository.SaveChangesAsync();
 
             return true;

@@ -1,5 +1,6 @@
-﻿using FinancialControl.Application.Interfaces;
-using FinancialControl.Domain.Entities;
+﻿using FinancialControl.Application.DTOs.TransactionDto;
+using FinancialControl.Application.Interfaces;
+using FinancialControl.Domain.Enums;
 
 namespace FinancialControl.Application.UseCases
 {
@@ -10,10 +11,27 @@ namespace FinancialControl.Application.UseCases
         {
             _repository = repository;
         }
-
-        public async Task<List<Transaction>> ExecuteAsync(Guid userId)
+        public async Task<object> ExecuteAsync(Guid userId, GetTransactionDto dto)
         {
-            return await _repository.GetByUserIdAsync(userId);
+            var result = await _repository.GetByUserIdAsync(
+                userId,
+                dto.Page,
+                dto.PageSize,
+                dto.Type is null 
+                    ? null 
+                    : (TransactionType)dto.Type,
+                dto.CategoryId,
+                dto.StartDate,
+                dto.EndDate
+                );
+
+            return new
+            {
+                dto.Page,
+                dto.PageSize,
+                TotalItems = result.Item2,
+                Data = result.Item1
+            };
         }
     }
 }

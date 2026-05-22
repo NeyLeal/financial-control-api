@@ -13,9 +13,15 @@ namespace FinancialControl.Application.UseCases
         {
             _repository = repository;
         }
-        public async Task<Transaction> ExecuteAsync(Guid userId, decimal amount, string description, TransactionType type)
+        public async Task<Transaction> ExecuteAsync(
+            Guid userId,
+            Guid categoryId,
+            decimal amount,
+            string description, 
+            TransactionType type
+            )
         {
-            var transaction = new Transaction(userId, amount, description, type, DateTime.UtcNow);
+            var transaction = new Transaction(userId, categoryId, amount, description, type, DateTime.UtcNow);
 
             await _repository.AddAsync(transaction);
 

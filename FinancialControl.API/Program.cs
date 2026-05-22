@@ -63,11 +63,14 @@ builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<CreateUserUseCase>();
+
 builder.Services.AddScoped<CreateTransactionUseCase>();
 builder.Services.AddScoped<GetTransactionSummaryUseCase>();
 builder.Services.AddScoped<GetTransactionUseCase>();
 builder.Services.AddScoped<UpdateTransactionUseCase>();
 builder.Services.AddScoped<DeleteTransactionUseCase>();
+
+builder.Services.AddScoped<GetDashboardUseCase>();
 builder.Services.AddScoped<CreateCategoryUseCase>();
 builder.Services.AddScoped<GetCategoryUseCase>();
 builder.Services.AddScoped<UpdateCategoryUseCase>();

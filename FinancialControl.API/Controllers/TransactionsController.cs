@@ -17,12 +17,14 @@ namespace FinancialControl.API.Controllers
         private readonly CreateTransactionUseCase _createTransactionUseCase;
         private readonly DeleteTransactionUseCase _deleteTransactionUseCase;
         private readonly UpdateTransactionUseCase _updateTransactionUseCase;
+        private readonly GetDashboardUseCase _getDashboardUseCase;
 
         public TransactionsController(
             CreateTransactionUseCase createTransactionUseCase,
             DeleteTransactionUseCase deleteTransactionUseCase,
             GetTransactionUseCase getTransactionUseCase,
             GetTransactionSummaryUseCase getTransactionSummaryUseCase,
+            GetDashboardUseCase getDashboardUseCase,
             UpdateTransactionUseCase updateTransactionUseCase
             )
         {
@@ -31,28 +33,36 @@ namespace FinancialControl.API.Controllers
             _createTransactionUseCase = createTransactionUseCase;
             _deleteTransactionUseCase = deleteTransactionUseCase;
             _updateTransactionUseCase = updateTransactionUseCase;
+            _getDashboardUseCase = getDashboardUseCase; 
         }
 
         
         #region Get
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery] GetTransactionDto dto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var transaction = await _getTransactionUseCase.ExecuteAsync(Guid.Parse(userId!));
+            var transaction = await _getTransactionUseCase.ExecuteAsync(Guid.Parse(userId!), dto);
 
             return Ok(transaction);
         }
 
         [HttpGet("summary")]
-        public async Task<IActionResult> GetSummary()
+        public async Task<IActionResult> GetSummary([FromQuery] GetTransactionSummaryDto dto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var summary = await _getTransactionSummaryUseCase.ExecuteAsync(Guid.Parse(userId!));
+            var summary = await _getTransactionSummaryUseCase.ExecuteAsync(Guid.Parse(userId!), dto);
 
             return Ok(summary);
+        }
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> Dashboard()
+        {
+            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var result = await _getDashboardUseCase.ExecuteAsync(userId);
+            return Ok(result);
         }
         #endregion
         #region Post
@@ -63,6 +73,7 @@ namespace FinancialControl.API.Controllers
 
             var transaction = await _createTransactionUseCase.ExecuteAsync(
                 Guid.Parse(userId!),
+                dto.CategoryId,
                 dto.Amount,
                 dto.Description,
                 (TransactionType)dto.Type);
@@ -79,6 +90,7 @@ namespace FinancialControl.API.Controllers
             var updated = await _updateTransactionUseCase.ExecuteAsync(
                         id,
                         Guid.Parse(userId!),
+                        dto.CategoryId,
                         dto.Amount,
                         dto.Description,
                         (TransactionType)dto.Type);
