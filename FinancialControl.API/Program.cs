@@ -1,3 +1,4 @@
+using FinancialControl.API.Logging;
 using FinancialControl.API.Middlewares;
 using FinancialControl.Application.Interfaces;
 using FinancialControl.Application.UseCases;
@@ -105,9 +106,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 
 app.Run();

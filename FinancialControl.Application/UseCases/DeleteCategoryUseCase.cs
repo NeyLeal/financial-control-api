@@ -1,4 +1,5 @@
-﻿using FinancialControl.Application.Interfaces;
+﻿using FinancialControl.Application.Exceptions;
+using FinancialControl.Application.Interfaces;
 
 namespace FinancialControl.Application.UseCases
 {
@@ -6,19 +7,29 @@ namespace FinancialControl.Application.UseCases
     {
         private readonly ICategoryRepository _repository;
 
-        public DeleteCategoryUseCase(ICategoryRepository repository)
+        public DeleteCategoryUseCase(
+            ICategoryRepository repository)
         {
             _repository = repository;
         }
 
-        public async Task<bool> ExecuteAsync(Guid id, Guid userId)
+        public async Task<bool> ExecuteAsync(
+            Guid id,
+            Guid userId)
         {
-            var category = await _repository.GetByIdAsync(id, userId);
+            var category =
+                await _repository.GetByIdAsync(
+                    id,
+                    userId);
+
             if (category is null)
                 return false;
+
             await _repository.DeleteAsync(category);
+
             await _repository.SaveChangesAsync();
-            return true;    
+
+            return true;
         }
     }
 }

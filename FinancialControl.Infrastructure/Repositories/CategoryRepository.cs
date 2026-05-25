@@ -1,6 +1,7 @@
-﻿ using FinancialControl.Application.Interfaces;
-using FinancialControl.Infrastructure.Data;
+﻿using FinancialControl.Application.Exceptions;
+ using FinancialControl.Application.Interfaces;
 using FinancialControl.Domain.Entities;
+using FinancialControl.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 namespace FinancialControl.Infrastructure.Repositories
 {
@@ -47,7 +48,16 @@ namespace FinancialControl.Infrastructure.Repositories
 
         public async Task SaveChangesAsync()
         {
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            catch (DbUpdateException ex)
+            {
+                throw new BusinessException(
+                    "Cannot delete category because there are transactions linked to it.");
+            }
         }
     }
 }
