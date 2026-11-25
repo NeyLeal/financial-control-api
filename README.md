@@ -50,6 +50,8 @@ The solution is split into:
 
 ### 1. Start SQL Server
 
+Copy `.env.example` to `.env` and set `SA_PASSWORD` to a password of your choice. Then run:
+
 ```bash
 docker compose up -d
 ```
